@@ -12,10 +12,10 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const parsed = createMatchSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid Payload", details: parsed.error }, { status: 400 });
+    return NextResponse.json({ error: "Invalid Payload", details: parsed.error.issues }, { status: 400 });
   }
 
-  const { data: { startTime, endTime, homeScore, awayScore } } = parsed;
+  const { startTime, endTime, homeScore, awayScore } = parsed.data;
   try {
 
     const [event] = await db.insert(matches).values(
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: event }, { status: 201 });
   } catch (e) {
     console.log(e);
-    return NextResponse.json({ error: "Internal Server Error", details: e }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const parsed = listMatchesQuerySchema.safeParse(searchParams);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid Query Parameters", details: JSON.stringify(parsed.error) }, { status: 400 });
+    return NextResponse.json({ error: "Invalid Query Parameters", details: parsed.error.issues }, { status: 400 });
   }
 
   const limit = Math.min(parsed.data.limit ?? 50, MAX_LIMIT);
@@ -54,6 +54,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ events }, { status: 200 });
   } catch (e) {
     console.log(e);
-    return NextResponse.json({ error: "Failed to fetch matches", details: e }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch matches" }, { status: 500 });
   }
 }
