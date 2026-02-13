@@ -32,6 +32,6 @@ export const commentary = pgTable('commentary', {
     team: varchar('team', { length: 255 }),
     message: varchar('message', { length: 1000 }).notNull(),
     metadata: jsonb('metadata'),
-    tags: varchar('tags', { length: 500 }),
+    tags: varchar('tags', { length: 500 }).array(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
 });
