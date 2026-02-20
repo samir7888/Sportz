@@ -1,63 +1,104 @@
-import Image from "next/image";
+"use client"
+import { useEffect, useState } from "react";
+import { Navbar } from "./components/Navbar";
+import { TeamCard } from "./components/team-card";
+import { fetchMatchCommentary, fetchMatches } from "./service/api";
+import Pusher from "pusher-js";
+import { Commentary, CommentaryResponse, Match } from "@/type";
+import { useSearchParams } from "next/navigation";
+import { CommentaryCard } from "./components/commentary-card";
 
 export default function Home() {
+  const [matchData, setMatchData] = useState<Match[]>([]);
+  const [commentaries, setCommentaries] = useState<Commentary[]>([]);
+
+  const searchParams = useSearchParams();
+  const selectedMatchId = searchParams.get("matchId");
+
+  useEffect(() => {
+
+    const getMatches = async () => {
+      const matches = await fetchMatches();
+      setMatchData(matches.events);
+    }
+    getMatches();
+
+  }, [])
+
+
+  useEffect(() => {
+    const pusher = new Pusher(
+      process.env.NEXT_PUBLIC_PUSHER_KEY!,
+      {
+        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+      }
+    );
+
+    const channel = pusher.subscribe("sportz");
+
+    channel.bind("match.created", (data: Match) => {
+      setMatchData((prev) => [data, ...prev])
+    });
+
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
+    };
+  }, []);
+
+
+
+  useEffect(() => {
+    if (selectedMatchId) {
+      const getCommentaries = async () => {
+        try {
+          const data = await fetchMatchCommentary(selectedMatchId);
+          console.log(data);
+          setCommentaries(data.data);
+        } catch (error) {
+          console.error("Failed to fetch commentaries:", error);
+        }
+      };
+      getCommentaries();
+    } else {
+      setCommentaries([]);
+    }
+  }, [selectedMatchId]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+    <div className="flex min-h-screen bg-zinc-50 font-sans text-black">
+      <main className="flex flex-col h-screen mx-auto w-7xl">
+        <Navbar />
+        <div className="grid grid-cols-4 gap-4 p-4">
+          <div className="col-span-3 grid grid-cols-2 gap-4">
+
+            {matchData.map((match) => (
+              <TeamCard key={match.id} match={match} />
+            ))}
+          </div>
+
+          <div className="col-span-1 border-2 border-black rounded-2xl bg-white overflow-hidden flex flex-col">
+            <div className="p-4 border-b-2 border-black bg-yellow-400 font-bold uppercase tracking-wider">
+              Live Commentary
+            </div>
+            <div className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)]">
+              {selectedMatchId ? (
+                commentaries.length > 0 ? (
+                  commentaries.map((c) => (
+                    <CommentaryCard key={c.id} commentary={c} />
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-neutral-500 italic">
+                    No commentary available for this match yet.
+                  </div>
+                )
+              ) : (
+                <div className="p-8 text-center text-neutral-500">
+                  Select a match to view live commentary
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </main>
     </div>
