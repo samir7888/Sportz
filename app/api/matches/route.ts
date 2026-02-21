@@ -17,7 +17,18 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
+import { auth } from "@/utils/auth";
+import { headers } from "next/headers";
+
 export async function POST(request: NextRequest) {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await request.json();
   const parsed = createMatchSchema.safeParse(body);
   if (!parsed.success) {
@@ -26,10 +37,10 @@ export async function POST(request: NextRequest) {
 
   const { startTime, endTime, homeScore, awayScore } = parsed.data;
   try {
-
     const [event] = await db.insert(matches).values(
       {
         ...parsed.data,
+        userId: session.user.id, // Set the owner
         startTime: new Date(startTime),
         endTime: new Date(endTime),
         homeScore: homeScore ?? 0,

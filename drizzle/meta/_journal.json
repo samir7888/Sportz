@@ -15,6 +15,13 @@
       "when": 1770955818189,
       "tag": "0001_slippery_fallen_one",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771676034511,
+      "tag": "0002_mute_deadpool",
+      "breakpoints": true
     }
   ]
 }

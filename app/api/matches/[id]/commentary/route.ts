@@ -14,10 +14,21 @@ const pusher = new Pusher({
     useTLS: true,
 });
 
+import { auth } from "@/utils/auth";
+import { headers } from "next/headers";
+
 export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Validate match ID from params
     const paramsParsed = matchIdParamSchema.safeParse({ id: (await params).id });
     if (!paramsParsed.success) {

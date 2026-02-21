@@ -1,6 +1,6 @@
 export interface Match {
   id: string | number;
-  sport: string;
+  sport: SportType;
   homeTeam: string;
   awayTeam: string;
   status: string; // Allow flexible status strings from API
@@ -14,6 +14,13 @@ export interface Match {
 export interface MatchResponse {
   events: Match[];
 }
+
+export const sportsType = {
+  FOOTBALL: "football",
+  CRICKET: "cricket",
+} as const;
+
+export type SportType = typeof sportsType[keyof typeof sportsType];
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
 
