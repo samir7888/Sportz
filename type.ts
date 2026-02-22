@@ -28,6 +28,8 @@ export interface Commentary {
   id: string | number;
   matchId: string | number;
   minute?: number;
+  over?: number;
+  run?: number;
   sequence?: number;
   period?: string;
   eventType?: string;

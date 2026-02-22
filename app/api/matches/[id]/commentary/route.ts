@@ -62,7 +62,7 @@ export async function POST(
             .returning();
 
         // Trigger real-time update via Pusher
-        await pusher.trigger(`match-${matchId}`, "commentary.created", newCommentary);
+        await pusher.trigger(`match-${matchId}`, "commentary-added", newCommentary);
 
         return NextResponse.json({ data: newCommentary }, { status: 201 });
     } catch (error) {

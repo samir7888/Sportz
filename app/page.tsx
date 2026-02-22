@@ -26,6 +26,7 @@ export default function Home() {
   }, [])
 
 
+  // 1. Global subscriptions (e.g., new match created)
   useEffect(() => {
     const pusher = new Pusher(
       process.env.NEXT_PUBLIC_PUSHER_KEY!,
@@ -35,7 +36,6 @@ export default function Home() {
     );
 
     const channel = pusher.subscribe("sportz");
-
     channel.bind("match.created", (data: Match) => {
       setMatchData((prev) => [data, ...prev])
     });
@@ -46,6 +46,29 @@ export default function Home() {
     };
   }, []);
 
+  // 2. Match-specific subscriptions (e.g., live commentary for current match)
+  useEffect(() => {
+    if (!selectedMatchId) return;
+
+    const pusher = new Pusher(
+      process.env.NEXT_PUBLIC_PUSHER_KEY!,
+      {
+        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+      }
+    );
+
+    const channel = pusher.subscribe(`match-${selectedMatchId}`);
+
+    channel.bind(`commentary-added`, (data: Commentary) => {
+      setCommentaries((prev) => [data, ...prev])
+    });
+
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
+    };
+  }, [selectedMatchId]);
+
 
 
   useEffect(() => {
@@ -53,7 +76,6 @@ export default function Home() {
       const getCommentaries = async () => {
         try {
           const data = await fetchMatchCommentary(selectedMatchId);
-          console.log(data);
           setCommentaries(data.data);
         } catch (error) {
           console.error("Failed to fetch commentaries:", error);
@@ -85,7 +107,7 @@ export default function Home() {
               {selectedMatchId ? (
                 commentaries.length > 0 ? (
                   commentaries.map((c) => (
-                    <CommentaryCard key={c.id} commentary={c} />
+                    <CommentaryCard key={c.id} c={c} />
                   ))
                 ) : (
                   <div className="p-8 text-center text-neutral-500 italic">

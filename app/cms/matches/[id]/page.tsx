@@ -237,12 +237,12 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
                                         <div key={c.id} className="p-6 hover:bg-zinc-50 transition-colors group">
                                             <div className="flex gap-6 items-start">
                                                 <div className="flex flex-col items-center">
-                                                    <span className="text-2xl font-black">{c.minute}'</span>
-                                                    <span className="text-[10px] font-bold uppercase text-zinc-400">{c.period}</span>
+                                                    <span className="text-2xl font-black text-black">{c.minute}'</span>
+                                                    <span className="text-[10px] font-bold uppercase text-zinc-800">{c.period}</span>
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex justify-between items-start mb-1">
-                                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-black ${c.eventType === 'goal' ? 'bg-green-400' :
+                                                        <span className={`text-[10px] font-medium text-black uppercase px-2 py-0.5 rounded border border-black ${c.eventType === 'goal' ? 'bg-green-400' :
                                                             c.eventType === 'card' ? 'bg-red-400' : 'bg-zinc-100'
                                                             }`}>
                                                             {c.eventType}
