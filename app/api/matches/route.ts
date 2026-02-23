@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { matches } from "@/db/schema";
 import { getMatchStatus } from "@/utils/match-status";
 import { createMatchSchema, listMatchesQuerySchema } from "@/validations/matches";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import Pusher from "pusher";
 
@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
         endTime: new Date(endTime),
         homeScore: homeScore ?? 0,
         awayScore: awayScore ?? 0,
-        status: getMatchStatus(startTime, endTime)
       }
     ).returning();
 
@@ -77,4 +76,4 @@ export async function GET(request: NextRequest) {
     console.log(e);
     return NextResponse.json({ error: "Failed to fetch matches" }, { status: 500 });
   }
-}
+} 

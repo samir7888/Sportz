@@ -2,15 +2,18 @@
 import { useEffect, useState } from "react";
 import { Navbar } from "./components/Navbar";
 import { TeamCard } from "./components/team-card";
-import { fetchMatchCommentary, fetchMatches } from "./service/api";
+import { fetchLiveMatches, fetchMatchCommentary, fetchMatches, fetchUpcomingMatches } from "./service/api";
 import Pusher from "pusher-js";
 import { Commentary, CommentaryResponse, Match } from "@/type";
 import { useSearchParams } from "next/navigation";
 import { CommentaryCard } from "./components/commentary-card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Home() {
   const [matchData, setMatchData] = useState<Match[]>([]);
+  const [liveMatches, setLiveMatches] = useState<Match[]>([]);
   const [commentaries, setCommentaries] = useState<Commentary[]>([]);
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
 
   const searchParams = useSearchParams();
   const selectedMatchId = searchParams.get("matchId");
@@ -23,6 +26,22 @@ export default function Home() {
     }
     getMatches();
 
+  }, [])
+
+  useEffect(() => {
+    const getLiveMatches = async () => {
+      const liveMatches = await fetchLiveMatches();
+      setLiveMatches(liveMatches.events);
+    }
+    getLiveMatches();
+  }, [])
+
+  useEffect(() => {
+    const getUpcomingMatches = async () => {
+      const upcomingMatches = await fetchUpcomingMatches();
+      setUpcomingMatches(upcomingMatches.events);
+    }
+    getUpcomingMatches();
   }, [])
 
 
@@ -89,39 +108,84 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen bg-zinc-50 font-sans text-black">
-      <main className="flex flex-col h-screen mx-auto w-7xl">
+      <main className="flex flex-col pb-12 h-full mx-auto w-7xl">
         <Navbar />
-        <div className="grid grid-cols-4 gap-4 p-4">
-          <div className="col-span-3 grid grid-cols-2 gap-4">
 
-            {matchData.map((match) => (
-              <TeamCard key={match.id} match={match} />
-            ))}
-          </div>
 
-          <div className="col-span-1 border-2 border-black rounded-2xl bg-white overflow-hidden flex flex-col">
-            <div className="p-4 border-b-2 border-black bg-yellow-400 font-bold uppercase tracking-wider">
-              Live Commentary
+        <Tabs className="mt-12" defaultValue="all">
+          <TabsList className="gap-4">
+            <TabsTrigger className="text-black border-2 border-black px-3 py-4" value="all">{`All Matches (${matchData.length})`}</TabsTrigger>
+            <TabsTrigger className="border-2 border-black text-black px-3 py-4" value="live">{`Live Matches (${liveMatches.length})`}</TabsTrigger>
+            <TabsTrigger className="border-2 border-black text-black px-3 py-4" value="upcoming">Upcoming Matches ({upcomingMatches.length})</TabsTrigger>
+          </TabsList>
+          <TabsContent value="all">
+            <div className="col-span-3 grid grid-cols-2 gap-4 h-full">
+
+              {matchData.map((match) => (
+                <TeamCard key={match.id} match={match} tab={"all"} />
+              ))}
             </div>
-            <div className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)]">
-              {selectedMatchId ? (
-                commentaries.length > 0 ? (
-                  commentaries.map((c) => (
-                    <CommentaryCard key={c.id} c={c} />
-                  ))
-                ) : (
-                  <div className="p-8 text-center text-neutral-500 italic">
-                    No commentary available for this match yet.
-                  </div>
-                )
-              ) : (
-                <div className="p-8 text-center text-neutral-500">
-                  Select a match to view live commentary
+
+
+          </TabsContent>
+          <TabsContent value="live">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+
+              <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-4">
+
+                {liveMatches.map((match) => (
+                  <TeamCard key={match.id} match={match} tab={"live"} />
+                ))}
+              </div>
+
+              <div className="col-span-1 md:col-span-2 border-2 border-black rounded-2xl bg-white overflow-hidden flex flex-col">
+                <div className="p-4 border-b-2 border-black bg-yellow-400 font-bold uppercase tracking-wider">
+                  Live Commentary
                 </div>
-              )}
+                <div className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)]">
+                  {selectedMatchId ? (
+                    commentaries.length > 0 ? (
+                      commentaries.map((c) => (
+                        <CommentaryCard key={c.id} c={c} />
+                      ))
+                    ) : (
+                      <div className="p-8 text-center text-neutral-500 italic">
+                        No commentary available for this match yet.
+                      </div>
+                    )
+                  ) : (
+                    <div className="p-8 text-center text-neutral-500">
+                      Select a match to view live commentary
+                    </div>
+                  )}
+                </div>
+              </div>
+
+
             </div>
-          </div>
-        </div>
+
+          </TabsContent>
+
+
+          <TabsContent value="upcoming">
+
+
+            <div className="grid grid-cols-2 gap-4 h-full">
+
+              {upcomingMatches.map((match) => (
+                <TeamCard key={match.id} match={match} tab={"upcoming"} />
+              ))}
+            </div>
+
+
+          </TabsContent>
+        </Tabs>
+
+
+
+
+
       </main>
     </div>
   );

@@ -1,20 +1,21 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { authClient } from "@/utils/auth-client";
 import { useRouter } from "next/navigation";
 import { Navbar } from "../components/Navbar";
 import { fetchUserMatches } from "../service/api";
-import { Match } from "@/type";
+import { Match, sportsType } from "@/type";
 import Link from "next/link";
 import { formatTime } from "@/utils/format-date";
+import { getMatchStatus } from "@/utils/match-status";
+import { useAppMutation } from "../hooks/useAppMutation";
+import { useQuery } from "@tanstack/react-query";
 
 export default function CMSPage() {
     const { data: session, isPending } = authClient.useSession();
     const router = useRouter();
 
-    const [matches, setMatches] = useState<Match[]>([]);
-    const [loading, setLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
 
     // Form state
@@ -23,81 +24,55 @@ export default function CMSPage() {
     const [awayTeam, setAwayTeam] = useState("");
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
-    const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState("");
 
-    useEffect(() => {
-        if (!isPending && !session) {
-            router.push("/signin");
-        }
-    }, [session, isPending, router]);
+    const { data: matchesData, isLoading: loading } = useQuery({
+        queryKey: ["matches", "user"],
+        queryFn: fetchUserMatches,
+        enabled: !!session,
+    });
 
-    useEffect(() => {
-        const getMatches = async () => {
-            try {
-                const data = await fetchUserMatches();
-                setMatches(data.events);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        getMatches();
-    }, []);
+    const matches = matchesData?.events || [];
+
+    const mutation = useAppMutation();
+    const submitting = mutation.isPending;
+    const error = mutation.error ? ((mutation.error as any).response?.data?.message || (mutation.error as any).message || "An error occurred") : null;
 
     const handleCreateMatch = async (e: React.FormEvent) => {
         e.preventDefault();
-        setSubmitting(true);
-        setError("");
 
-        try {
-            const start = new Date(startTime).toISOString();
-            const end = new Date(endTime).toISOString();
+        const start = new Date(startTime).toISOString();
+        const end = new Date(endTime).toISOString();
 
-            const res = await fetch("/api/matches", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    sport,
-                    homeTeam,
-                    awayTeam,
-                    startTime: start,
-                    endTime: end,
-                }),
-            });
-
-            const result = await res.json();
-
-            if (!res.ok) {
-                setError(result.error || "Failed to create match");
-            } else {
-                setMatches([result.data, ...matches]);
+        mutation.mutate({
+            endpoint: "matches",
+            method: "post",
+            data: {
+                sport,
+                homeTeam,
+                awayTeam,
+                startTime: start,
+                endTime: end,
+            },
+            invalidateTags: ["matches"],
+            onSuccess: () => {
                 setShowCreateForm(false);
                 setHomeTeam("");
                 setAwayTeam("");
                 setStartTime("");
                 setEndTime("");
             }
-        } catch (err) {
-            setError("An unexpected error occurred");
-        } finally {
-            setSubmitting(false);
-        }
+        });
     };
 
     const handleDeleteMatch = async (id: number) => {
         if (!confirm("Are you sure? This will delete all commentary for this match.")) return;
-        try {
-            const res = await fetch(`/api/matches/${id}`, { method: "DELETE" });
-            if (res.ok) {
-                setMatches(matches.filter(m => m.id !== id));
-            }
-        } catch (err) {
-            console.error(err);
-        }
+
+        mutation.mutate({
+            endpoint: "matches",
+            method: "delete",
+            id: id.toString(),
+            invalidateTags: ["matches"],
+        });
     };
 
     if (isPending || !session) {
@@ -137,13 +112,24 @@ export default function CMSPage() {
 
                             <div className="space-y-2">
                                 <label className="block font-bold uppercase text-xs tracking-widest text-zinc-400">Sport Type</label>
-                                <input
-                                    value={sport}
-                                    onChange={(e) => setSport(e.target.value)}
-                                    className="w-full bg-zinc-100 border-2 border-black rounded-xl p-4 font-bold focus:bg-white transition-colors outline-none"
-                                    placeholder="Football, Basketball..."
-                                    required
-                                />
+
+
+                                {
+                                    <select
+                                        value={sport}
+                                        onChange={(e) => setSport(e.target.value)}
+                                        className="w-full bg-zinc-100 border-2 border-black rounded-xl p-4 font-bold focus:bg-white transition-colors outline-none"
+                                        required
+                                    >
+                                        <option value="">Select Sport</option>
+                                        {Object.values(sportsType).map((key) => (
+                                            <option key={key} value={key}>
+                                                {key}
+                                            </option>
+                                        ))}
+                                    </select>
+                                }
+
                             </div>
 
                             <div className="space-y-2">
@@ -223,7 +209,7 @@ export default function CMSPage() {
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase border-2 border-black ${match.status === 'live' ? 'bg-red-500 text-white' :
                                             match.status === 'finished' ? 'bg-zinc-800 text-white' : 'bg-yellow-400'
                                             }`}>
-                                            {match.status}
+                                            {getMatchStatus(match.startTime, match.endTime)}
                                         </span>
                                     </div>
                                     <div className="space-y-2">

@@ -2,7 +2,6 @@ import { sql } from 'drizzle-orm';
 import { pgTable, serial, varchar, timestamp, integer, jsonb, pgEnum, text, boolean } from 'drizzle-orm/pg-core';
 
 // Enum for match status
-export const matchStatusEnum = pgEnum('match_status', ['scheduled', 'live', 'finished']);
 export const sportsTypeEnum = pgEnum('sports_type', ['football', 'cricket']);
 
 // User table for Better-Auth
@@ -66,9 +65,8 @@ export const matches = pgTable('matches', {
     sport: sportsTypeEnum('sport').notNull(),
     homeTeam: varchar('home_team', { length: 255 }).notNull(),
     awayTeam: varchar('away_team', { length: 255 }).notNull(),
-    status: matchStatusEnum('status').notNull().default('scheduled'),
     startTime: timestamp('start_time', { withTimezone: true }).notNull(),
-    endTime: timestamp('end_time', { withTimezone: true }),
+    endTime: timestamp('end_time', { withTimezone: true }).notNull(),
     homeScore: integer('home_score').notNull().default(0),
     awayScore: integer('away_score').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
