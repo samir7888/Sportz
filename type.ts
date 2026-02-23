@@ -8,6 +8,8 @@ export interface Match {
   endTime?: string;
   homeScore: number;
   awayScore: number;
+  homeWickets?: number;
+  awayWickets?: number;
   createdAt?: string;
 }
 
@@ -57,6 +59,8 @@ export interface WSMessageScore {
   data: {
     homeScore: number;
     awayScore: number;
+    homeWickets?: number;
+    awayWickets?: number;
   };
 }
 

@@ -26,7 +26,9 @@ export const createMatchSchema = z
         startTime: z.string().datetime(),
         endTime: z.string().datetime(),
         homeScore: z.coerce.number().int().nonnegative().optional(),
+        homeWickets: z.coerce.number().int().nonnegative().optional(),
         awayScore: z.coerce.number().int().nonnegative().optional(),
+        awayWickets: z.coerce.number().int().nonnegative().optional(),
     })
     .superRefine((data, ctx) => {
         const startDate = new Date(data.startTime);
@@ -44,7 +46,9 @@ export const createMatchSchema = z
 // Update score schema
 export const updateScoreSchema = z.object({
     homeScore: z.coerce.number().int().nonnegative(),
+    homeWickets: z.coerce.number().int().nonnegative().optional(),
     awayScore: z.coerce.number().int().nonnegative(),
+    awayWickets: z.coerce.number().int().nonnegative().optional(),
 });
 
 // Type exports for convenience

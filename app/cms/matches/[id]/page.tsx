@@ -47,8 +47,10 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
     });
     // Score state
     const match = matchData;
-    const [homeScore, setHomeScore] = useState<string | number>();
-    const [awayScore, setAwayScore] = useState<string | number>();
+    const [homeScore, setHomeScore] = useState<number>(0);
+    const [awayScore, setAwayScore] = useState<number>(0);
+    const [homeWickets, setHomeWickets] = useState<number>(0)
+    const [awayWickets, setAwayWickets] = useState<number>(0)
 
     const commentaries = commentariesData || [];
     const loading = matchLoading || commLoading;
@@ -62,7 +64,7 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
         mutation.mutate({
             endpoint: `matches/${id}`,
             method: "patch",
-            data: { homeScore, awayScore },
+            data: { homeScore, awayScore, homeWickets, awayWickets },
             invalidateTags: [["matches", id]],
         });
     };
@@ -128,7 +130,7 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
                 {/* Sidebar Forms */}
                 <div className="flex justify-between gap-12">
                     {/* Score Update Form */}
-                    <div className="bg-white text-black border-4 border-black rounded-3xl p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="bg-white text-black border-4 border-black rounded-3xl p-8 ">
                         <h3 className="text-xl font-bold mb-6 uppercase tracking-tight">Update Score</h3>
                         <form onSubmit={handleUpdateScore} className="space-y-4">
                             {match.sport === "football" ? (<div className="grid grid-cols-2 gap-4">
@@ -154,21 +156,41 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
                                 : (
                                     <>
                                         <div className="space-y-2">
-                                            <label className="block font-bold uppercase text-[10px] tracking-widest text-zinc-400">{match.homeTeam}</label>
+                                            <label className="block font-bold uppercase text-[10px] tracking-widest text-zinc-400">{match.homeTeam} Runs</label>
                                             <input
-                                                type="string"
-                                                placeholder="123/2..."
+                                                type="number"
+                                                placeholder="123"
                                                 value={homeScore}
-                                                onChange={(e) => setHomeScore(e.target.value)}
+                                                onChange={(e) => setHomeScore(Number(e.target.value))}
                                                 className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="block font-bold uppercase text-[10px] tracking-widest text-zinc-400">{match.awayTeam}</label>
+                                            <label className="block font-bold uppercase text-[10px] tracking-widest text-zinc-400">{match.homeTeam} Wickets</label>
                                             <input
-                                                type="string"
+                                                type="number"
+                                                placeholder="2"
+                                                value={homeWickets}
+                                                onChange={(e) => setHomeWickets(Number(e.target.value))}
+                                                className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="block font-bold uppercase text-[10px] tracking-widest text-zinc-400">{match.awayTeam} Runs</label>
+                                            <input
+                                                type="number"
                                                 value={awayScore}
-                                                onChange={(e) => setAwayScore(e.target.value)}
+                                                onChange={(e) => setAwayScore(Number(e.target.value))}
+                                                className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="block font-bold uppercase text-[10px] tracking-widest text-zinc-400">{match.awayTeam} Wickets</label>
+                                            <input
+                                                type="number"
+                                                placeholder="2"
+                                                value={awayWickets}
+                                                onChange={(e) => setAwayWickets(Number(e.target.value))}
                                                 className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
                                             />
                                         </div>

@@ -68,6 +68,8 @@ export const matches = pgTable('matches', {
     startTime: timestamp('start_time', { withTimezone: true }).notNull(),
     endTime: timestamp('end_time', { withTimezone: true }).notNull(),
     homeScore: integer('home_score').notNull().default(0),
+    homeWickets: integer('home-wickets').notNull().default(0),
+    awayWickets: integer('away-wickets').notNull().default(0),
     awayScore: integer('away_score').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
 });
