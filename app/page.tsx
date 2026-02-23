@@ -121,9 +121,13 @@ export default function Home() {
           <TabsContent value="all">
             <div className="col-span-3 grid grid-cols-2 gap-4 h-full">
 
-              {matchData.map((match) => (
+              {matchData.length > 0 ? matchData.map((match) => (
                 <TeamCard key={match.id} match={match} tab={"all"} />
-              ))}
+              )) : (
+                <div className="p-8 text-center text-neutral-500">
+                  No matches available.
+                </div>
+              )}
             </div>
 
 
@@ -134,21 +138,26 @@ export default function Home() {
 
               <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-4">
 
-                {liveMatches.map((match) => (
+                {liveMatches.length > 0 ? liveMatches.map((match) => (
                   <TeamCard key={match.id} match={match} tab={"live"} />
-                ))}
+                )) : (
+                  <div className="p-8 text-center text-neutral-500">
+                    No live matches available.
+                  </div>
+                )}
               </div>
 
-              <div className="col-span-1 md:col-span-2 border-2 border-black rounded-2xl bg-white overflow-hidden flex flex-col">
+              <div className="col-span-1 max-h-[360px] md:col-span-2 border-2 border-black rounded-2xl bg-white overflow-hidden flex flex-col">
                 <div className="p-4 border-b-2 border-black bg-yellow-400 font-bold uppercase tracking-wider">
                   Live Commentary
                 </div>
-                <div className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)]">
+                <div className="flex-1 overflow-y-auto">
                   {selectedMatchId ? (
                     commentaries.length > 0 ? (
-                      commentaries.map((c) => (
-                        <CommentaryCard key={c.id} c={c} />
-                      ))
+                      commentaries.map((c) => {
+                        const match = [...liveMatches, ...matchData, ...upcomingMatches].find(m => m.id.toString() === selectedMatchId);
+                        return <CommentaryCard key={c.id} c={c} sport={match?.sport} />;
+                      })
                     ) : (
                       <div className="p-8 text-center text-neutral-500 italic">
                         No commentary available for this match yet.
@@ -171,12 +180,16 @@ export default function Home() {
           <TabsContent value="upcoming">
 
 
-            <div className="grid grid-cols-2 gap-4 h-full">
 
-              {upcomingMatches.map((match) => (
+            {upcomingMatches.length > 0 ? upcomingMatches.map((match) => (
+              <div className="grid grid-cols-2 gap-4 h-full">
                 <TeamCard key={match.id} match={match} tab={"upcoming"} />
-              ))}
-            </div>
+              </div>
+            )) : (
+              <div className="p-8 text-center text-neutral-500">
+                No upcoming matches available.
+              </div>
+            )}
 
 
           </TabsContent>

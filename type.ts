@@ -33,7 +33,6 @@ export interface Commentary {
   over?: number;
   run?: number;
   sequence?: number;
-  period?: string;
   eventType?: string;
   actor?: string;
   team?: string;

@@ -15,9 +15,11 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
 
     // Form state
     const [minute, setMinute] = useState("");
-    const [period, setPeriod] = useState("1st Half");
+    const [currentTeam, setCurrentTeam] = useState("homeTeam");
     const [eventType, setEventType] = useState("commentary");
     const [message, setMessage] = useState("");
+    const [run, setRun] = useState("");
+    const [actor, setActor] = useState("");
 
 
 
@@ -30,6 +32,8 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
             if (found) {
                 setHomeScore(found.homeScore);
                 setAwayScore(found.awayScore);
+                setHomeWickets(found.homeWickets || 0);
+                setAwayWickets(found.awayWickets || 0);
             }
             return found;
         },
@@ -47,10 +51,10 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
     });
     // Score state
     const match = matchData;
-    const [homeScore, setHomeScore] = useState<number>(0);
-    const [awayScore, setAwayScore] = useState<number>(0);
-    const [homeWickets, setHomeWickets] = useState<number>(0)
-    const [awayWickets, setAwayWickets] = useState<number>(0)
+    const [homeScore, setHomeScore] = useState<number>(match?.homeScore || 0);
+    const [awayScore, setAwayScore] = useState<number>(match?.awayScore || 0);
+    const [homeWickets, setHomeWickets] = useState<number>(match?.homeWickets || 0)
+    const [awayWickets, setAwayWickets] = useState<number>(match?.awayWickets || 0)
 
     const commentaries = commentariesData || [];
     const loading = matchLoading || commLoading;
@@ -59,33 +63,41 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
     const submitting = mutation.isPending;
     const error = mutation.error ? ((mutation.error as any).response?.data?.message || (mutation.error as any).message || "An error occurred") : null;
 
-    const handleUpdateScore = async (e: React.FormEvent) => {
-        e.preventDefault();
-        mutation.mutate({
-            endpoint: `matches/${id}`,
-            method: "patch",
-            data: { homeScore, awayScore, homeWickets, awayWickets },
-            invalidateTags: [["matches", id]],
-        });
-    };
 
     const handleAddCommentary = async (e: React.FormEvent) => {
         e.preventDefault();
 
         mutation.mutate({
+            endpoint: `matches/${id}`,
+            method: "patch",
+            data: {
+                homeScore: match?.sport === 'cricket' && run !== "" && currentTeam === "homeTeam" ? (homeScore + parseInt(run)) : eventType === 'goal' && currentTeam === "homeTeam" ? homeScore + 1 : homeScore,
+                awayScore: match?.sport === 'cricket' && run !== "" && currentTeam === "awayTeam" ? (awayScore + parseInt(run)) : eventType === 'goal' && currentTeam === "awayTeam" ? awayScore + 1 : awayScore,
+                homeWickets: eventType === 'wicket' && currentTeam === "homeTeam" ? homeWickets + 1 : homeWickets,
+                awayWickets: eventType === 'wicket' && currentTeam === "awayTeam" ? awayWickets + 1 : awayWickets,
+            },
+            invalidateTags: [["matches", id]],
+        });
+
+        mutation.mutate({
             endpoint: `matches/${id}/commentary`,
             method: "post",
             data: {
-                minute: parseInt(minute),
+                minute: match?.sport === 'football' ? parseInt(minute) : 0,
+                over: match?.sport === 'cricket' ? parseFloat(minute) : undefined,
                 sequence: commentaries.length + 1,
-                period,
                 eventType,
                 message,
+                run: match?.sport === 'cricket' && run !== "" ? parseInt(run) : undefined,
+
+                actor: actor || undefined,
             },
             invalidateTags: [["commentaries", id]],
             onSuccess: () => {
                 setMessage("");
                 setMinute("");
+                setRun("");
+                setActor("");
             }
         });
     };
@@ -129,82 +141,6 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
 
                 {/* Sidebar Forms */}
                 <div className="flex justify-between gap-12">
-                    {/* Score Update Form */}
-                    <div className="bg-white text-black border-4 border-black rounded-3xl p-8 ">
-                        <h3 className="text-xl font-bold mb-6 uppercase tracking-tight">Update Score</h3>
-                        <form onSubmit={handleUpdateScore} className="space-y-4">
-                            {match.sport === "football" ? (<div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="block font-bold uppercase text-[10px] tracking-widest text-zinc-400">{match.homeTeam}</label>
-                                    <input
-                                        type="number"
-                                        value={homeScore}
-                                        onChange={(e) => setHomeScore(Number(e.target.value))}
-                                        className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="block font-bold uppercase text-[10px] tracking-widest text-zinc-400">{match.awayTeam}</label>
-                                    <input
-                                        type="number"
-                                        value={awayScore}
-                                        onChange={(e) => setAwayScore(Number(e.target.value))}
-                                        className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
-                                    />
-                                </div>
-                            </div>)
-                                : (
-                                    <>
-                                        <div className="space-y-2">
-                                            <label className="block font-bold uppercase text-[10px] tracking-widest text-zinc-400">{match.homeTeam} Runs</label>
-                                            <input
-                                                type="number"
-                                                placeholder="123"
-                                                value={homeScore}
-                                                onChange={(e) => setHomeScore(Number(e.target.value))}
-                                                className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="block font-bold uppercase text-[10px] tracking-widest text-zinc-400">{match.homeTeam} Wickets</label>
-                                            <input
-                                                type="number"
-                                                placeholder="2"
-                                                value={homeWickets}
-                                                onChange={(e) => setHomeWickets(Number(e.target.value))}
-                                                className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="block font-bold uppercase text-[10px] tracking-widest text-zinc-400">{match.awayTeam} Runs</label>
-                                            <input
-                                                type="number"
-                                                value={awayScore}
-                                                onChange={(e) => setAwayScore(Number(e.target.value))}
-                                                className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="block font-bold uppercase text-[10px] tracking-widest text-zinc-400">{match.awayTeam} Wickets</label>
-                                            <input
-                                                type="number"
-                                                placeholder="2"
-                                                value={awayWickets}
-                                                onChange={(e) => setAwayWickets(Number(e.target.value))}
-                                                className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
-                                            />
-                                        </div>
-                                    </>
-
-                                )}
-                            <button
-                                disabled={submitting}
-                                className="w-full bg-blue-400 border-4 border-black py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-blue-500 transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-                            >
-                                {submitting ? "Updating..." : "Update Score"}
-                            </button>
-                        </form>
-                    </div>
 
                     {/* Add Commentary Form */}
                     <div className="bg-white w-full text-black border-4 border-black rounded-3xl p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] sticky top-8">
@@ -231,31 +167,20 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block font-bold uppercase text-xs tracking-widest text-zinc-400">Period</label>
+                                <label className="block font-bold uppercase text-xs tracking-widest text-zinc-400">Team</label>
 
-                                {
-                                    match.sport === 'football' ? (
-                                        <select
-                                            value={period}
-                                            onChange={(e) => setPeriod(e.target.value)}
-                                            className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
-                                        >
-                                            <option>1st Half</option>
-                                            <option>2nd Half</option>
-                                            <option>Extra Time</option>
-                                            <option>Penalties</option>
-                                        </select>
-                                    ) : (
-                                        <select
-                                            value={period}
-                                            onChange={(e) => setPeriod(e.target.value)}
-                                            className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
-                                        >
-                                            <option>1st Innings</option>
-                                            <option>2nd Innings</option>
-                                        </select>
-                                    )
-                                }
+                                <select
+                                    value={currentTeam}
+                                    onChange={(e) => setCurrentTeam(e.target.value)}
+                                    className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
+                                >
+                                    <option value="homeTeam">Home Team</option>
+                                    <option value="awayTeam">Away Team</option>
+
+
+                                </select>
+
+
                             </div>
 
                             <div className="space-y-2">
@@ -286,8 +211,32 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
                                         </select>
                                     )
                                 }
-
                             </div>
+
+                            {match?.sport === 'cricket' && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="block font-bold uppercase text-xs tracking-widest text-zinc-400">Runs</label>
+                                        <input
+                                            type="number"
+                                            placeholder="Runs"
+                                            value={run}
+                                            onChange={(e) => setRun(e.target.value)}
+                                            className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block font-bold uppercase text-xs tracking-widest text-zinc-400">Player name</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Kohli"
+                                            value={actor}
+                                            onChange={(e) => setActor(e.target.value)}
+                                            className="w-full bg-zinc-100 border-2 border-black rounded-xl p-3 font-bold focus:bg-white transition-colors outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="space-y-2">
                                 <label className="block font-bold uppercase text-xs tracking-widest text-zinc-400">Message</label>

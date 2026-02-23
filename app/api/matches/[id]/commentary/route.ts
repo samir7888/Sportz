@@ -4,7 +4,7 @@ import { matchIdParamSchema } from "@/validations/matches";
 import { createCommentarySchema, listCommentaryQuerySchema } from "@/validations/commentary";
 import { NextRequest, NextResponse } from "next/server";
 import Pusher from "pusher";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, desc } from "drizzle-orm";
 
 const pusher = new Pusher({
     appId: process.env.PUSHER_APP_ID!,
@@ -108,7 +108,7 @@ export async function GET(
             .select()
             .from(commentary)
             .where(eq(commentary.matchId, matchId))
-            .orderBy(asc(commentary.sequence))
+            .orderBy(desc(commentary.createdAt))
             .limit(limit);
 
         return NextResponse.json({ data: commentaryList }, { status: 200 });

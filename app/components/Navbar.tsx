@@ -2,11 +2,12 @@
 
 import { authClient } from "@/utils/auth-client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export const Navbar = () => {
     const { data: session, isPending } = authClient.useSession();
     const router = useRouter();
+    const pathname = usePathname();
 
     const handleSignOut = async () => {
         await authClient.signOut();
@@ -33,7 +34,7 @@ export const Navbar = () => {
                     ) : session ? (
                         <>
                             <Link href="/cms" className="px-4 py-2 bg-black text-white rounded-xl font-medium hover:bg-zinc-800 transition-colors">
-                                CMS
+                               {pathname === '/cms' ? 'Site' : 'Your Matches'}
                             </Link>
                             <button
                                 onClick={handleSignOut}

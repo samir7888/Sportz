@@ -18,7 +18,7 @@ export const TeamCard = ({ match, tab, onDelete }: { match: Match, tab: string, 
     }
 
     return (
-        <div className="bg-white text-black border-4 border-black rounded-3xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer group">
+        <div className="bg-white h-fit text-black border-4 border-black rounded-3xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer group">
             <div className="flex pb-4  w-full justify-between items-center">
                 <div className="flex w-full justify-between space-y-3 items-center">
                     <div className="flex flex-col items-start space-y-2">
