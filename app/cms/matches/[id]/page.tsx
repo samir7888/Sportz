@@ -123,9 +123,7 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
     if (!match) return <div>Match not found</div>;
 
     return (
-        <div className="min-h-screen flex flex-col gap-5 bg-zinc-50 pb-20">
-            <main className="min-w-7xl mx-auto px-4">
-                <Navbar />
+            <main className="max-w-7xl mx-auto px-4">
 
                 <div className="mt-12 mb-8">
                     <button
@@ -134,18 +132,20 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
                     >
                         ← Back to CMS
                     </button>
-                    <h2 className="text-4xl font-bold text-black uppercase tracking-tighter">
+                    <h2 className="text-2xl md:text-4xl font-bold text-black uppercase tracking-tighter">
                         Manage Match: {match.homeTeam} vs {match.awayTeam}
                     </h2>
                 </div>
 
                 {/* Sidebar Forms */}
+
+                
                 <div className="flex justify-between gap-12">
 
                     {/* Add Commentary Form */}
                     <div className="bg-white w-full text-black border-4 border-black rounded-3xl p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] sticky top-8">
                         <h3 className="text-xl font-bold mb-6 uppercase tracking-tight">Add Commentary</h3>
-                        <form onSubmit={handleAddCommentary} className="space-y-4">
+                        <form onSubmit={handleAddCommentary} className="space-y-4 flex flex-col gap-4">
                             {error && (
                                 <div className="bg-red-100 border-2 border-red-500 text-red-600 p-3 rounded-lg text-sm font-bold">
                                     {String(error)}
@@ -261,7 +261,6 @@ export default function MatchCMSPage({ params }: { params: Promise<{ id: string 
 
 
             </main>
-        </div>
     );
 }
 

@@ -82,11 +82,9 @@ export default function CMSPage() {
     }
 
     return (
-        <div className="min-h-screen bg-zinc-50 pb-20 ">
             <main className="max-w-7xl mx-auto px-4 flex flex-col gap-5">
-                <Navbar />
 
-                <div className="mt-12 flex justify-between items-end mb-8">
+                <div className="mt-12 flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                     <div>
                         <h2 className="text-4xl font-bold text-black uppercase tracking-tighter">Match Management</h2>
                         <p className="text-zinc-500 mt-2 font-medium">Create and manage your sport events</p>
@@ -213,6 +211,5 @@ export default function CMSPage() {
 
                 </div>
             </main>
-        </div>
     );
 }
