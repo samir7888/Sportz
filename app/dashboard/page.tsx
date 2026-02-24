@@ -124,26 +124,26 @@ function DashboardContent() {
                 <Navbar />
 
                 <Tabs className="mt-12" defaultValue="all">
-                    <TabsList className="bg-zinc-200/50 p-1.5 rounded-2xl border-2 border-black inline-flex gap-2">
+                    <TabsList className="bg-zinc-200/50 p-1.5 rounded-2xl border-2 border-black inline-flex gap-1 md:gap-2">
                         <TabsTrigger
-                            className="data-[state=active]:bg-black data-[state=active]:text-white px-6 py-3 rounded-xl font-black uppercase italic tracking-wider transition-all"
+                            className="data-[state=active]:bg-black data-[state=active]:text-white px-2 py-2 md:px-6 md:py-3 rounded-xl font-black uppercase italic tracking-wider transition-all"
                             value="all"
                         >
-                            <LayoutDashboard className="size-4 mr-2 inline" />
+                            <LayoutDashboard className="size-3 md:size-4 mr-1 md:mr-2 inline" />
                             All ({matchData.length})
                         </TabsTrigger>
                         <TabsTrigger
-                            className="data-[state=active]:bg-red-500 data-[state=active]:text-white px-6 py-3 rounded-xl font-black uppercase italic tracking-wider transition-all"
+                            className="data-[state=active]:bg-red-500 data-[state=active]:text-white px-2 py-2 md:px-6 md:py-3 rounded-xl font-black uppercase italic tracking-wider transition-all"
                             value="live"
                         >
-                            <Radio className="size-4 mr-2 inline" />
+                            <Radio className="size-3 md:size-4 mr-1 md:mr-2 inline" />
                             Live ({liveMatches.length})
                         </TabsTrigger>
                         <TabsTrigger
-                            className="data-[state=active]:bg-yellow-400 data-[state=active]:text-black px-6 py-3 rounded-xl font-black uppercase italic tracking-wider transition-all"
+                            className="data-[state=active]:bg-yellow-400 data-[state=active]:text-black px-2 py-2 md:px-6 md:py-3 rounded-xl font-black uppercase italic tracking-wider transition-all"
                             value="upcoming"
                         >
-                            <CalendarDays className="size-4 mr-2 inline" />
+                            <CalendarDays className="size-3 md:size-4 mr-1 md:mr-2 inline" />
                             Upcoming ({upcomingMatches.length})
                         </TabsTrigger>
                     </TabsList>
