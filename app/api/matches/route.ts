@@ -4,18 +4,9 @@ import { getMatchStatus } from "@/utils/match-status";
 import { createMatchSchema, listMatchesQuerySchema } from "@/validations/matches";
 import { desc, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import Pusher from "pusher";
-
+import { pusherServer } from "@/lib/pusher";
 
 const MAX_LIMIT = 100;
-
-const pusher = new Pusher({
-  appId: process.env.PUSHER_APP_ID!,
-  key: process.env.PUSHER_KEY!,
-  secret: process.env.PUSHER_SECRET!,
-  cluster: process.env.PUSHER_CLUSTER!,
-  useTLS: true,
-});
 
 import { auth } from "@/utils/auth";
 import { headers } from "next/headers";
@@ -48,7 +39,7 @@ export async function POST(request: NextRequest) {
       }
     ).returning();
 
-    pusher.trigger('sportz', 'match.created', event);
+    await pusherServer.trigger('matches', 'match.created', event);
     return NextResponse.json({ data: event }, { status: 201 });
   } catch (e) {
     console.log(e);

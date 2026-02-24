@@ -3,16 +3,8 @@ import { commentary } from "@/db/schema";
 import { matchIdParamSchema } from "@/validations/matches";
 import { createCommentarySchema, listCommentaryQuerySchema } from "@/validations/commentary";
 import { NextRequest, NextResponse } from "next/server";
-import Pusher from "pusher";
+import { pusherServer } from "@/lib/pusher";
 import { eq, asc, desc } from "drizzle-orm";
-
-const pusher = new Pusher({
-    appId: process.env.PUSHER_APP_ID!,
-    key: process.env.PUSHER_KEY!,
-    secret: process.env.PUSHER_SECRET!,
-    cluster: process.env.PUSHER_CLUSTER!,
-    useTLS: true,
-});
 
 import { auth } from "@/utils/auth";
 import { headers } from "next/headers";
@@ -62,7 +54,9 @@ export async function POST(
             .returning();
 
         // Trigger real-time update via Pusher
-        await pusher.trigger(`match-${matchId}`, "commentary-added", newCommentary);
+        await pusherServer.trigger(`match-${matchId}`, "commentary-added", newCommentary);
+        // Also trigger a general match update event if you want the dashboard to know there's new commentary
+        await pusherServer.trigger("matches", "match-updated", { id: matchId });
 
         return NextResponse.json({ data: newCommentary }, { status: 201 });
     } catch (error) {

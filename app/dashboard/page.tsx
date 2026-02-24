@@ -3,7 +3,7 @@ import { useEffect, useState, Suspense } from "react";
 import { Navbar } from "../components/Navbar";
 import { TeamCard } from "../components/team-card";
 import { fetchLiveMatches, fetchMatchCommentary, fetchMatches, fetchUpcomingMatches } from "../service/api";
-import Pusher from "pusher-js";
+import { pusherClient } from "@/lib/pusher";
 import { Commentary, Match } from "@/type";
 import { useSearchParams } from "next/navigation";
 import { CommentaryCard } from "../components/commentary-card";
@@ -42,46 +42,52 @@ function DashboardContent() {
     }, [])
 
 
-    // 1. Global subscriptions (e.g., new match created)
+    // Real-time subscriptions
     useEffect(() => {
-        const pusher = new Pusher(
-            process.env.NEXT_PUBLIC_PUSHER_KEY!,
-            {
-                cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-            }
-        );
+        const matchesChannel = pusherClient.subscribe("matches");
 
-        const channel = pusher.subscribe("sportz");
-        channel.bind("match.created", (data: Match) => {
-            setMatchData((prev) => [data, ...prev])
+        const handleMatchUpdate = (data: Partial<Match> & { id: string | number }) => {
+            const updateList = (prev: Match[]) => prev.map(m => m.id.toString() === data.id.toString() ? { ...m, ...data } : m);
+            setMatchData(updateList);
+            setLiveMatches(updateList);
+            setUpcomingMatches(updateList);
+        };
+
+        matchesChannel.bind("match-updated", handleMatchUpdate);
+        matchesChannel.bind("score-updated", handleMatchUpdate); // Fallback for old event name if any
+
+        matchesChannel.bind("match.created", (data: Match) => {
+            setMatchData((prev) => [data, ...prev]);
+            if (data.status.toLowerCase() === "live") setLiveMatches((prev) => [data, ...prev]);
+            if (data.status.toLowerCase() === "upcoming") setUpcomingMatches((prev) => [data, ...prev]);
         });
 
         return () => {
-            channel.unbind_all();
-            channel.unsubscribe();
+            matchesChannel.unbind_all();
+            pusherClient.unsubscribe("matches");
         };
     }, []);
 
-    // 2. Match-specific subscriptions (e.g., live commentary for current match)
     useEffect(() => {
         if (!selectedMatchId) return;
 
-        const pusher = new Pusher(
-            process.env.NEXT_PUBLIC_PUSHER_KEY!,
-            {
-                cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-            }
-        );
-
-        const channel = pusher.subscribe(`match-${selectedMatchId}`);
+        const channel = pusherClient.subscribe(`match-${selectedMatchId}`);
 
         channel.bind(`commentary-added`, (data: Commentary) => {
-            setCommentaries((prev) => [data, ...prev])
+            setCommentaries((prev) => [data, ...prev]);
+        });
+
+        channel.bind(`score-updated`, (data: Match) => {
+            const updateList = (prev: Match[]) =>
+            prev.map(m => m.id.toString() === data.id.toString() ? { ...m, ...data } : m);
+            setMatchData(updateList);
+            setLiveMatches(updateList);
+            setUpcomingMatches(updateList);
         });
 
         return () => {
             channel.unbind_all();
-            channel.unsubscribe();
+            pusherClient.unsubscribe(`match-${selectedMatchId}`);
         };
     }, [selectedMatchId]);
 
@@ -124,7 +130,7 @@ function DashboardContent() {
                 <Navbar />
 
                 <Tabs className="mt-12" defaultValue="all">
-                    <TabsList className="bg-zinc-200/50 p-1.5 rounded-2xl border-2 border-black inline-flex gap-1 md:gap-2">
+                    <TabsList className="bg-zinc-200/50 p-1.5 mx-auto rounded-2xl border-2 border-black inline-flex gap-1 md:gap-2">
                         <TabsTrigger
                             className="data-[state=active]:bg-black data-[state=active]:text-white px-2 py-2 md:px-6 md:py-3 rounded-xl font-black uppercase italic tracking-wider transition-all"
                             value="all"
